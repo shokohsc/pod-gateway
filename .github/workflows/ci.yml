@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run Go tests
+        run: make test
+      - name: Syntax-check shell scripts
+        run: sh -n images/gateway/*.sh images/routing-init/*.sh
+      - name: Build container images
+        run: make docker-build
+
+  images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push (sha)
+        run: make docker-build docker-push REGISTRY=ghcr.io/${{ github.repository_owner }} IMAGE_TAG=${{ github.sha }}
+      - name: Tag and push latest
+        run: |
+          for img in vpn-egress-gateway gateway routing-init; do
+            docker tag ghcr.io/${{ github.repository_owner }}/$img:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/$img:latest
+            docker push ghcr.io/${{ github.repository_owner }}/$img:latest
+          done
