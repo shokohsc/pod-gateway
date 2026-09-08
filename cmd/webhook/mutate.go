@@ -1,0 +1,42 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/example/vpn-egress-gateway/pkg/routing"
+)
+
+const annotationKey = "vpn.example.com/egress"
+
+type Options struct {
+	GatewayIP   string
+	ClusterCIDR string
+	GatewayCIDR string
+	VPNServerIP string
+}
+
+func hasGatewayAnnotation(p *v1.Pod) bool {
+	if p.Annotations == nil {
+		return false
+	}
+	return p.Annotations[annotationKey] == "true"
+}
+
+func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
+	for _, c := range p.Spec.InitContainers {
+		if c.Name == "vpn-egress-redirect" {
+			return nil, fmt.Errorf("pod %s/%s already has vpn-egress-redirect initContainer", p.Namespace, p.Name)
+		}
+	}
+
+	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP)
+	existing := p.Spec.InitContainers
+	existing = append(existing, container)
+
+	return json.Marshal([]map[string]interface{}{
+		{"op": "add", "path": "/spec/initContainers", "value": existing},
+	})
+}
