@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func TestHasGatewayAnnotation(t *testing.T) {
@@ -169,8 +172,53 @@ func TestInjectRoutingInitContainer_DoubleInjectionGuard(t *testing.T) {
 		GatewayCIDR: "10.96.0.0/24",
 		VPNServerIP: "203.0.113.1",
 	}
-	_, err := injectRoutingInitContainer(pod, opts)
-	if err == nil {
-		t.Error("expected error for double injection, got nil")
+	patch, err := injectRoutingInitContainer(pod, opts)
+	if err != nil {
+		t.Fatalf("unexpected error for double injection: %v", err)
+	}
+	if patch != nil {
+		t.Errorf("expected nil patch for double injection, got %s", patch)
+	}
+}
+
+func TestAdmissionReviewDecodeRoundTrip(t *testing.T) {
+	pod := v1.Pod{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-pod",
+			Namespace:   "default",
+			Annotations: map[string]string{"vpn.example.com/egress": "true"},
+		},
+	}
+	podRaw, err := json.Marshal(pod)
+	if err != nil {
+		t.Fatalf("marshal pod: %v", err)
+	}
+
+	review := admissionv1.AdmissionReview{
+		TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"},
+		Request: &admissionv1.AdmissionRequest{
+			UID:    types.UID("test-uid"),
+			Object: runtime.RawExtension{Raw: podRaw},
+		},
+	}
+	body, err := json.Marshal(review)
+	if err != nil {
+		t.Fatalf("marshal review: %v", err)
+	}
+
+	var out admissionv1.AdmissionReview
+	if _, _, err := deserializer.Decode(body, nil, &out); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if out.Request == nil {
+		t.Fatal("decoded request is nil")
+	}
+	var decoded v1.Pod
+	if err := json.Unmarshal(out.Request.Object.Raw, &decoded); err != nil {
+		t.Fatalf("unmarshal pod from decoded request: %v", err)
+	}
+	if decoded.Annotations["vpn.example.com/egress"] != "true" {
+		t.Errorf("annotation = %q, want %q", decoded.Annotations["vpn.example.com/egress"], "true")
 	}
 }

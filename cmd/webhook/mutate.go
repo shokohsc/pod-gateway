@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -28,7 +27,7 @@ func hasGatewayAnnotation(p *v1.Pod) bool {
 func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 	for _, c := range p.Spec.InitContainers {
 		if c.Name == "vpn-egress-redirect" {
-			return nil, fmt.Errorf("pod %s/%s already has vpn-egress-redirect initContainer", p.Namespace, p.Name)
+			return nil, nil
 		}
 	}
 

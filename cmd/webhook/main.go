@@ -22,11 +22,25 @@ var (
 	deserializer = codecs.UniversalDeserializer()
 )
 
+func init() {
+	if err := admissionv1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	certFile := os.Getenv("TLS_CERT_FILE")
 	keyFile := os.Getenv("TLS_KEY_FILE")
 	if certFile == "" || keyFile == "" {
 		log.Fatal("TLS_CERT_FILE and TLS_KEY_FILE must be set")
+	}
+
+	gatewayIP := os.Getenv("GATEWAY_IP")
+	clusterCIDR := os.Getenv("CLUSTER_CIDR")
+	gatewayCIDR := os.Getenv("GATEWAY_CIDR")
+	vpnServerIP := os.Getenv("VPN_SERVER_IP")
+	if gatewayIP == "" || clusterCIDR == "" || gatewayCIDR == "" || vpnServerIP == "" {
+		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR, VPN_SERVER_IP must all be set")
 	}
 
 	listenAddr := os.Getenv("LISTEN_ADDR")
@@ -35,10 +49,10 @@ func main() {
 	}
 
 	opts := Options{
-		GatewayIP:   os.Getenv("GATEWAY_IP"),
-		ClusterCIDR: os.Getenv("CLUSTER_CIDR"),
-		GatewayCIDR: os.Getenv("GATEWAY_CIDR"),
-		VPNServerIP: os.Getenv("VPN_SERVER_IP"),
+		GatewayIP:   gatewayIP,
+		ClusterCIDR: clusterCIDR,
+		GatewayCIDR: gatewayCIDR,
+		VPNServerIP: vpnServerIP,
 	}
 
 	mux := http.NewServeMux()
@@ -86,6 +100,11 @@ func mutateHandler(opts Options) http.HandlerFunc {
 			return
 		}
 
+		if patchBytes == nil {
+			sendAdmissionResponse(w, review.Request.UID, true, "")
+			return
+		}
+
 		patchType := admissionv1.PatchTypeJSONPatch
 		sendAdmissionResponseWithPatch(w, review.Request.UID, true, patchBytes, &patchType)
 	}
@@ -108,10 +127,10 @@ func sendAdmissionResponse(w http.ResponseWriter, uid types.UID, allowed bool, m
 func sendAdmissionResponseWithPatch(w http.ResponseWriter, uid types.UID, allowed bool, patch []byte, patchType *admissionv1.PatchType) {
 	review := admissionv1.AdmissionReview{
 		Response: &admissionv1.AdmissionResponse{
-			UID:        uid,
-			Allowed:    allowed,
-			PatchType:  patchType,
-			Patch:      patch,
+			UID:       uid,
+			Allowed:   allowed,
+			PatchType: patchType,
+			Patch:     patch,
 		},
 	}
 	review.SetGroupVersionKind(admissionv1.SchemeGroupVersion.WithKind("AdmissionReview"))
