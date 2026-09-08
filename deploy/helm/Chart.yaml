@@ -1,0 +1,6 @@
+apiVersion: v2
+name: vpn-egress-gateway
+description: VPN egress gateway with mutating webhook that routes selected pods' egress through a VPN tunnel
+type: application
+version: 0.1.0
+appVersion: latest

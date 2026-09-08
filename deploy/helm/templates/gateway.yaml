@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vpn-egress-gateway
+  labels:
+    app: vpn-egress-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vpn-egress-gateway
+  template:
+    metadata:
+      labels:
+        app: vpn-egress-gateway
+    spec:
+      tolerations: {{- toYaml .Values.tolerations | nindent 8 }}
+      initContainers:
+        - name: fetchconfig
+          image: "{{ .Values.registry }}/gateway:{{ .Values.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          command: ["/usr/local/bin/fetchconfig.sh"]
+          env:
+            - name: CONFIG_URL
+              value: {{ .Values.configURL | quote }}
+          volumeMounts:
+            - name: openvpn
+              mountPath: /etc/openvpn
+      containers:
+        - name: gateway
+          image: "{{ .Values.registry }}/gateway:{{ .Values.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            privileged: true
+          env:
+            - name: CLUSTER_CIDR
+              value: {{ .Values.clusterCIDR | quote }}
+            - name: GATEWAY_CIDR
+              value: {{ .Values.gatewayCIDR | quote }}
+            - name: VPN_SERVER_IP
+              value: {{ .Values.vpnServerIP | quote }}
+            - name: TUN_IF
+              value: {{ .Values.tunIf | default "tun0" | quote }}
+          volumeMounts:
+            - name: openvpn
+              mountPath: /etc/openvpn
+      volumes:
+        - name: openvpn
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpn-egress-gateway
+  labels:
+    app: vpn-egress-gateway
+spec:
+  type: ClusterIP
+  selector:
+    app: vpn-egress-gateway
+  ports:
+    - port: 1194
+      name: vpn

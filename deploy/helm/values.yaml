@@ -1,0 +1,33 @@
+# Registry and image tags for the three images, mirroring the Makefile's REGISTRY/IMAGE_TAG convention.
+registry: ghcr.io/example
+tag: latest
+imagePullPolicy: IfNotPresent
+
+# Remote URL the gateway initContainer fetches the openvpn client config from and writes to /etc/openvpn/client.ovpn.
+configURL: ""
+
+# RFC1918-ish range used inside the cluster (cluster pod/service CIDR). The kill-switch accepts this range
+# from the tunnel so cluster-internal traffic bypasses the VPN.
+clusterCIDR: "10.244.0.0/16"
+
+# CIDR of the gateway's tun interface. The kill-switch routes/tracks this range.
+gatewayCIDR: "10.8.0.2/32"
+
+# IP/name of the remote VPN server.
+vpnServerIP: ""
+
+# Redirect target for the webhook's injected routing-init container. MUST equal the ClusterIP of the
+# vpn-egress-gateway Service (Ruling C). Set this when the Service ClusterIP is known.
+gatewayIP: ""
+
+# Pod tolerations (e.g. for Talos control-plane taints). Empty by default.
+tolerations: []
+# - key: node-role.kubernetes.io/control-plane
+#   operator: Exists
+
+webhook:
+  replicaCount: 1
+  listenAddr: ":8443"
+  # Name of the cert-manager ClusterIssuer that issues the webhook serving certificate.
+  issuer:
+    name: "vpn-egress-private-ca"

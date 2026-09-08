@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vpn-egress-webhook
+  labels:
+    app: vpn-egress-webhook
+spec:
+  replicas: {{ .Values.webhook.replicaCount }}
+  selector:
+    matchLabels:
+      app: vpn-egress-webhook
+  template:
+    metadata:
+      labels:
+        app: vpn-egress-webhook
+    spec:
+      containers:
+        - name: webhook
+          image: "{{ .Values.registry }}/vpn-egress-gateway:{{ .Values.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: TLS_CERT_FILE
+              value: /etc/webhook/tls/tls.crt
+            - name: TLS_KEY_FILE
+              value: /etc/webhook/tls/tls.key
+            - name: LISTEN_ADDR
+              value: {{ .Values.webhook.listenAddr | quote }}
+            - name: GATEWAY_IP
+              value: {{ .Values.gatewayIP | quote }}
+            - name: CLUSTER_CIDR
+              value: {{ .Values.clusterCIDR | quote }}
+            - name: GATEWAY_CIDR
+              value: {{ .Values.gatewayCIDR | quote }}
+            - name: VPN_SERVER_IP
+              value: {{ .Values.vpnServerIP | quote }}
+          ports:
+            - containerPort: 8443
+              name: https
+          volumeMounts:
+            - name: webhook-tls
+              mountPath: /etc/webhook/tls
+              readOnly: true
+      volumes:
+        - name: webhook-tls
+          secret:
+            secretName: {{ .Values.webhook.tlsSecretName | default "vpn-egress-webhook-cert" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpn-egress-webhook
+  labels:
+    app: vpn-egress-webhook
+spec:
+  type: ClusterIP
+  selector:
+    app: vpn-egress-webhook
+  ports:
+    - port: 443
+      targetPort: 8443
+      name: https
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: vpn-egress-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ .Values.webhook.certName | default "vpn-egress-webhook-cert" }}"
+webhooks:
+  - name: vpn-egress.example.com
+    reinvocationPolicy: IfNeeded
+    sideEffects: None
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: vpn-egress-webhook
+        namespace: {{ .Release.Namespace }}
+        path: /mutate
+        port: 443
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE", "UPDATE"]
+    namespaceSelector: {}
