@@ -2,12 +2,18 @@
 set -e
 
 VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP is required}"
+CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR is required}"
+GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR is required}"
 TUN_IF="${TUN_IF:-tun0}"
 
 nft -f - <<EOF
 table inet killswitch {
   chain gewall {
     type filter hook forward priority filter; policy drop;
+    ct state established,related accept
+    ip saddr { $CLUSTER_CIDR, $GATEWAY_CIDR } accept
+    ip daddr { $CLUSTER_CIDR, $GATEWAY_CIDR } accept
+    ip daddr $VPN_SERVER_IP accept
   }
   chain outwall {
     type filter hook output priority filter; policy accept;
