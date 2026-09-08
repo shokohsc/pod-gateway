@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: webhook
-          image: "{{ .Values.registry }}/vpn-egress-gateway:{{ .Values.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.webhook.image }}:{{ .Values.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           env:
             - name: TLS_CERT_FILE
@@ -43,7 +43,7 @@ spec:
       volumes:
         - name: webhook-tls
           secret:
-            secretName: {{ .Values.webhook.tlsSecretName | default "vpn-egress-webhook-cert" }}
+            secretName: {{ .Values.webhook.tlsSecretName }}
 ---
 apiVersion: v1
 kind: Service
@@ -65,7 +65,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: vpn-egress-webhook
   annotations:
-    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ .Values.webhook.certName | default "vpn-egress-webhook-cert" }}"
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ .Values.webhook.certName }}"
 webhooks:
   - name: vpn-egress.example.com
     reinvocationPolicy: IfNeeded
@@ -77,7 +77,7 @@ webhooks:
         name: vpn-egress-webhook
         namespace: {{ .Release.Namespace }}
         path: /mutate
-        port: 443
+        port: https
     rules:
       - apiGroups: [""]
         apiVersions: ["v1"]

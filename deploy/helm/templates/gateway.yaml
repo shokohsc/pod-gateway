@@ -17,7 +17,7 @@ spec:
       tolerations: {{- toYaml .Values.tolerations | nindent 8 }}
       initContainers:
         - name: fetchconfig
-          image: "{{ .Values.registry }}/gateway:{{ .Values.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.gateway.image }}:{{ .Values.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           command: ["/usr/local/bin/fetchconfig.sh"]
           env:
@@ -28,7 +28,7 @@ spec:
               mountPath: /etc/openvpn
       containers:
         - name: gateway
-          image: "{{ .Values.registry }}/gateway:{{ .Values.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.gateway.image }}:{{ .Values.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           securityContext:
             privileged: true

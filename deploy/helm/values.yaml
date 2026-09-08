@@ -25,9 +25,21 @@ tolerations: []
 # - key: node-role.kubernetes.io/control-plane
 #   operator: Exists
 
+# Image repository names (without registry or tag), matching the Makefile's docker-build convention.
+gateway:
+  image: gateway
+
+routingInit:
+  image: routing-init
+
 webhook:
+  image: vpn-egress-gateway
   replicaCount: 1
   listenAddr: ":8443"
+  # Single source of truth for the webhook serving certificate. The Certificate, the secret it
+  # produces, and the webhook Deployment's mounted secret must all agree.
+  certName: vpn-egress-webhook-cert
+  tlsSecretName: vpn-egress-webhook-cert
   # Name of the cert-manager ClusterIssuer that issues the webhook serving certificate.
   issuer:
     name: "vpn-egress-private-ca"
