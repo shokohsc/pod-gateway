@@ -8,6 +8,7 @@ build:
 
 test:
 	go vet ./...
+	go test ./...
 
 docker-build:
 	docker build -t $(REGISTRY)/vpn-egress-gateway:$(IMAGE_TAG) .

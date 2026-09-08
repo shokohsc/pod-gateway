@@ -79,10 +79,11 @@ func TestInjectRoutingInitContainer_ProducesPatch(t *testing.T) {
 	}
 
 	opts := Options{
-		GatewayIP:   "10.0.0.1",
-		ClusterCIDR: "10.32.0.0/12",
-		GatewayCIDR: "10.96.0.0/24",
-		VPNServerIP: "203.0.113.1",
+		GatewayIP:        "10.0.0.1",
+		ClusterCIDR:      "10.32.0.0/12",
+		GatewayCIDR:      "10.96.0.0/24",
+		VPNServerIP:      "203.0.113.1",
+		RoutingInitImage: "routing-init:latest",
 	}
 
 	patch, err := injectRoutingInitContainer(pod, opts)
@@ -115,6 +116,9 @@ func TestInjectRoutingInitContainer_ProducesPatch(t *testing.T) {
 	if containers[0].Name != "vpn-egress-redirect" {
 		t.Errorf("container name = %q, want vpn-egress-redirect", containers[0].Name)
 	}
+	if containers[0].Image != "routing-init:latest" {
+		t.Errorf("container image = %q, want routing-init:latest", containers[0].Image)
+	}
 }
 
 func TestInjectRoutingInitContainer_ExistingInitContainers(t *testing.T) {
@@ -127,10 +131,11 @@ func TestInjectRoutingInitContainer_ExistingInitContainers(t *testing.T) {
 		},
 	}
 	opts := Options{
-		GatewayIP:   "10.0.0.1",
-		ClusterCIDR: "10.32.0.0/12",
-		GatewayCIDR: "10.96.0.0/24",
-		VPNServerIP: "203.0.113.1",
+		GatewayIP:        "10.0.0.1",
+		ClusterCIDR:      "10.32.0.0/12",
+		GatewayCIDR:      "10.96.0.0/24",
+		VPNServerIP:      "203.0.113.1",
+		RoutingInitImage: "routing-init:latest",
 	}
 	patch, err := injectRoutingInitContainer(pod, opts)
 	if err != nil {
@@ -167,10 +172,11 @@ func TestInjectRoutingInitContainer_DoubleInjectionGuard(t *testing.T) {
 		},
 	}
 	opts := Options{
-		GatewayIP:   "10.0.0.1",
-		ClusterCIDR: "10.32.0.0/12",
-		GatewayCIDR: "10.96.0.0/24",
-		VPNServerIP: "203.0.113.1",
+		GatewayIP:        "10.0.0.1",
+		ClusterCIDR:      "10.32.0.0/12",
+		GatewayCIDR:      "10.96.0.0/24",
+		VPNServerIP:      "203.0.113.1",
+		RoutingInitImage: "routing-init:latest",
 	}
 	patch, err := injectRoutingInitContainer(pod, opts)
 	if err != nil {

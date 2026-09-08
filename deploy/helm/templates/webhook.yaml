@@ -33,6 +33,8 @@ spec:
               value: {{ .Values.gatewayCIDR | quote }}
             - name: VPN_SERVER_IP
               value: {{ .Values.vpnServerIP | quote }}
+            - name: ROUTING_INIT_IMAGE
+              value: {{ .Values.routingInit.image | quote }}
           ports:
             - containerPort: 8443
               name: https

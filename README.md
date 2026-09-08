@@ -75,6 +75,8 @@ kubectl get svc vpn-egress-gateway -o jsonpath='{.spec.clusterIP}'
 | `vpnServerIP` | Remote VPN server IP | `""` (required) |
 | `gatewayIP` | Gateway Service ClusterIP | `""` (required) |
 | `tolerations` | Pod tolerations | `[]` |
+| `gateway.image` | Gateway image name | `gateway` |
+| `routingInit.image` | Routing-init image name | `routing-init` |
 | `webhook.image` | Webhook image name | `vpn-egress-gateway` |
 | `webhook.replicaCount` | Webhook replicas | `1` |
 | `webhook.listenAddr` | Webhook listen address | `:8443` |

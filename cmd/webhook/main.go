@@ -43,16 +43,22 @@ func main() {
 		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR, VPN_SERVER_IP must all be set")
 	}
 
+	routingInitImage := os.Getenv("ROUTING_INIT_IMAGE")
+	if routingInitImage == "" {
+		routingInitImage = "routing-init:latest"
+	}
+
 	listenAddr := os.Getenv("LISTEN_ADDR")
 	if listenAddr == "" {
 		listenAddr = ":8443"
 	}
 
 	opts := Options{
-		GatewayIP:   gatewayIP,
-		ClusterCIDR: clusterCIDR,
-		GatewayCIDR: gatewayCIDR,
-		VPNServerIP: vpnServerIP,
+		GatewayIP:        gatewayIP,
+		ClusterCIDR:      clusterCIDR,
+		GatewayCIDR:      gatewayCIDR,
+		VPNServerIP:      vpnServerIP,
+		RoutingInitImage: routingInitImage,
 	}
 
 	mux := http.NewServeMux()

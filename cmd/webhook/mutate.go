@@ -11,10 +11,11 @@ import (
 const annotationKey = "vpn.example.com/egress"
 
 type Options struct {
-	GatewayIP   string
-	ClusterCIDR string
-	GatewayCIDR string
-	VPNServerIP string
+	GatewayIP         string
+	ClusterCIDR       string
+	GatewayCIDR       string
+	VPNServerIP       string
+	RoutingInitImage  string
 }
 
 func hasGatewayAnnotation(p *v1.Pod) bool {
@@ -31,7 +32,7 @@ func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 		}
 	}
 
-	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP)
+	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP, opts.RoutingInitImage)
 	existing := p.Spec.InitContainers
 	existing = append(existing, container)
 
