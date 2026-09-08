@@ -55,19 +55,7 @@ fi
 # --- Test 1: fetchconfig.sh downloads config to output path ---
 echo "Test 1: fetchconfig.sh fetches config from URL"
 
-# Create a wrapper that mirrors fetchconfig.sh logic but uses temp output path.
-# This exercises the exact same curl flags, guard, and test -s logic.
-cat > "$TMPDIR/run.sh" <<WRAPPER_EOF
-#!/bin/sh
-set -eu
-out="$OUTPUT_FILE"
-CONFIG_URL="\${CONFIG_URL:?CONFIG_URL required}"
-curl -fSL --retry 3 --retry-delay 2 -o "\$out" "\$CONFIG_URL"
-test -s "\$out"
-WRAPPER_EOF
-chmod +x "$TMPDIR/run.sh"
-
-CONFIG_URL="file://$DUMMY_CONFIG" sh "$TMPDIR/run.sh" 2>&1
+OUT="$OUTPUT_FILE" CONFIG_URL="file://$DUMMY_CONFIG" "$FETCHCONFIG" 2>&1
 
 if [ -f "$OUTPUT_FILE" ] && [ -s "$OUTPUT_FILE" ]; then
     if diff -q "$DUMMY_CONFIG" "$OUTPUT_FILE" > /dev/null 2>&1; then
@@ -83,19 +71,19 @@ fi
 echo "Test 2: missing CONFIG_URL causes failure"
 rm -f "$OUTPUT_FILE"
 unset CONFIG_URL
-if sh "$TMPDIR/run.sh" 2>&1; then
+if OUT="$OUTPUT_FILE" "$FETCHCONFIG" 2>&1; then
     fail "expected failure with missing CONFIG_URL"
 else
     pass "correctly fails without CONFIG_URL"
 fi
 
-# --- Test 3: Empty URL results in empty or missing file ---
-echo "Test 3: invalid file:// URL causes failure"
+# --- Test 3: Nonexistent config path causes failure ---
+echo "Test 3: nonexistent config path causes failure"
 rm -f "$OUTPUT_FILE"
-if CONFIG_URL="file:///nonexistent/config.ovpn" sh "$TMPDIR/run.sh" 2>&1; then
-    fail "expected failure with invalid URL"
+if OUT="$OUTPUT_FILE" CONFIG_URL="file:///nonexistent/config.ovpn" "$FETCHCONFIG" 2>&1; then
+    fail "expected failure with nonexistent config path"
 else
-    pass "correctly fails with invalid URL"
+    pass "correctly fails with nonexistent config path"
 fi
 
 # --- Summary ---
