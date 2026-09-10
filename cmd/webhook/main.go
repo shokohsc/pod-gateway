@@ -51,6 +51,11 @@ func main() {
 		routingInitImage = "routing-init:latest"
 	}
 
+	annotationKey := os.Getenv("ANNOTATION_KEY")
+	if annotationKey == "" {
+		annotationKey = "vpn.example.com/egress"
+	}
+
 	healthAddr := os.Getenv("HEALTH_ADDR")
 	if healthAddr == "" {
 		healthAddr = ":8080"
@@ -62,6 +67,7 @@ func main() {
 	}
 
 	opts := Options{
+		AnnotationKey:    annotationKey,
 		GatewayIP:        gatewayIP,
 		ClusterCIDR:      clusterCIDR,
 		GatewayCIDR:      gatewayCIDR,
@@ -132,7 +138,7 @@ func mutateHandler(opts Options) http.HandlerFunc {
 			return
 		}
 
-		if !hasGatewayAnnotation(&pod) {
+		if !hasGatewayAnnotation(&pod, opts.AnnotationKey) {
 			sendAdmissionResponse(w, review.Request.UID, true, "")
 			return
 		}

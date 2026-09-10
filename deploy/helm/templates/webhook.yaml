@@ -27,6 +27,8 @@ spec:
               value: {{ .Values.webhook.listenAddr | quote }}
             - name: HEALTH_ADDR
               value: {{ .Values.webhook.healthAddr | quote }}
+            - name: ANNOTATION_KEY
+              value: {{ .Values.webhook.annotationKey | quote }}
             - name: GATEWAY_IP
               value: {{ .Values.gatewayIP | default (printf "vpn-egress-gateway.%s.svc.cluster.local" .Release.Namespace) | quote }}
             - name: CLUSTER_CIDR

@@ -8,9 +8,8 @@ import (
 	"github.com/example/vpn-egress-gateway/pkg/routing"
 )
 
-const annotationKey = "vpn.example.com/egress"
-
 type Options struct {
+	AnnotationKey    string
 	GatewayIP        string
 	ClusterCIDR      string
 	GatewayCIDR      string
@@ -18,11 +17,11 @@ type Options struct {
 	RoutingInitImage string
 }
 
-func hasGatewayAnnotation(p *v1.Pod) bool {
+func hasGatewayAnnotation(p *v1.Pod, key string) bool {
 	if p.Annotations == nil {
 		return false
 	}
-	return p.Annotations[annotationKey] == "true"
+	return p.Annotations[key] == "true"
 }
 
 func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {

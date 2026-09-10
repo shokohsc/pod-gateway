@@ -80,13 +80,15 @@ no manual bootstrap step is needed. To pin a specific address instead, pass
 | `webhook.replicaCount` | Webhook replicas | `1` |
 | `webhook.listenAddr` | Webhook listen address | `:8443` |
 | `webhook.healthAddr` | Plaintext health/readiness listener | `:8080` |
+| `webhook.annotationKey` | Opt-in annotation key | `vpn.example.com/egress` |
 | `webhook.certName` | cert-manager Certificate name | `vpn-egress-webhook-cert` |
 | `webhook.tlsSecretName` | TLS secret name | `vpn-egress-webhook-cert` |
 | `webhook.issuer.name` | cert-manager ClusterIssuer | `vpn-egress-private-ca` |
 
 ## Opt-In Annotation
 
-Add the annotation to any pod you want routed through the VPN:
+Pods opt in via the annotation key `webhook.annotationKey` (default
+`vpn.example.com/egress`):
 
 ```yaml
 metadata:

@@ -42,6 +42,8 @@ webhook:
   listenAddr: ":8443"
   # Plaintext HTTP listener for kubelet liveness/readiness probes (the TLS port cannot be probed).
   healthAddr: ":8080"
+  # Annotation that opts a pod into egress routing.
+  annotationKey: "vpn.example.com/egress"
   # Single source of truth for the webhook serving certificate. The Certificate, the secret it
   # produces, and the webhook Deployment's mounted secret must all agree.
   certName: vpn-egress-webhook-cert
