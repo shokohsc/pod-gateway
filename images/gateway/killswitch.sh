@@ -6,6 +6,7 @@ CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR is required}"
 GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR is required}"
 TUN_IF="${TUN_IF:-tun0}"
 VPN_LOG_LEVEL="${VPN_LOG_LEVEL:-1}"
+DATA_CIPHERS="${DATA_CIPHERS:-AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC}"
 
 nft -f - <<EOF
 table inet killswitch {
@@ -31,4 +32,5 @@ exec openvpn --config /etc/openvpn/client.ovpn \
   --up-restart \
   --route-up /usr/local/bin/killswitch-open.sh \
   --route-pre-down /usr/local/bin/killswitch-close.sh \
+  --data-ciphers "$DATA_CIPHERS" \
   --verb "$VPN_LOG_LEVEL"

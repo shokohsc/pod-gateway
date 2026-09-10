@@ -43,6 +43,8 @@ spec:
               value: {{ .Values.tunIf | default "tun0" | quote }}
             - name: VPN_LOG_LEVEL
               value: {{ .Values.vpnLogLevel | default "1" | quote }}
+            - name: DATA_CIPHERS
+              value: {{ .Values.dataCiphers | default "AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC" | quote }}
           volumeMounts:
             - name: openvpn
               mountPath: /etc/openvpn

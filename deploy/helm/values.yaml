@@ -29,6 +29,11 @@ tolerations: []
 # OpenVPN log verbosity (0-11). Set higher when debugging tunnel issues.
 vpnLogLevel: "1"
 
+# Data-channel ciphers the client offers. The default list (OpenVPN 2.6 GCM set
+# plus AES-128-CBC) connects to servers that only support the legacy CBC cipher.
+# Override to match a different VPN provider.
+dataCiphers: "AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC"
+
 # Image repository names (without registry or tag), matching the Makefile's docker-build convention.
 gateway:
   image: gateway

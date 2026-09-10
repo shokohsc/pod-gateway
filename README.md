@@ -74,6 +74,7 @@ no manual bootstrap step is needed. To pin a specific address instead, pass
 | `gatewayIP` | Gateway Service address (FQDN or literal ClusterIP) | `vpn-egress-gateway.<ns>.svc.cluster.local` |
 | `tolerations` | Pod tolerations | `[]` |
 | `vpnLogLevel` | OpenVPN log verbosity (0-11) | `1` |
+| `dataCiphers` | OpenVPN `--data-ciphers` list | `AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC` |
 | `gateway.image` | Gateway image name | `gateway` |
 | `routingInit.image` | Routing-init image name | `routing-init` |
 | `webhook.image` | Webhook image name | `vpn-egress-gateway` |
