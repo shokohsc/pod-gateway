@@ -41,6 +41,8 @@ spec:
               value: {{ .Values.vpnServerIP | quote }}
             - name: TUN_IF
               value: {{ .Values.tunIf | default "tun0" | quote }}
+            - name: VPN_LOG_LEVEL
+              value: {{ .Values.vpnLogLevel | default "1" | quote }}
           volumeMounts:
             - name: openvpn
               mountPath: /etc/openvpn

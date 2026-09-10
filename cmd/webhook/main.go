@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"time"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
@@ -48,6 +51,11 @@ func main() {
 		routingInitImage = "routing-init:latest"
 	}
 
+	healthAddr := os.Getenv("HEALTH_ADDR")
+	if healthAddr == "" {
+		healthAddr = ":8080"
+	}
+
 	listenAddr := os.Getenv("LISTEN_ADDR")
 	if listenAddr == "" {
 		listenAddr = ":8443"
@@ -64,9 +72,38 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", mutateHandler(opts))
 
+	healthMux := http.NewServeMux()
+	healthMux.HandleFunc("/healthz", healthHandler)
+	healthMux.HandleFunc("/readyz", readyHandler(gatewayIP))
+
+	go func() {
+		log.Printf("health listening on %s", healthAddr)
+		if err := http.ListenAndServe(healthAddr, healthMux); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	log.Printf("listening on %s", listenAddr)
 	if err := http.ListenAndServeTLS(listenAddr, certFile, keyFile, mux); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "ok")
+}
+
+func readyHandler(gatewayIP string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if _, err := net.DefaultResolver.LookupHost(ctx, gatewayIP); err != nil {
+			http.Error(w, fmt.Sprintf("gateway %q unresolvable: %v", gatewayIP, err), http.StatusServiceUnavailable)
+			return
+		}
+		healthHandler(w, r)
 	}
 }
 

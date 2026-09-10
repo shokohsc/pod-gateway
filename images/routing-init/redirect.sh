@@ -5,6 +5,12 @@ CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR required}"
 GATEWAY_IP="${GATEWAY_IP:?GATEWAY_IP required}"
 VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP required}"
 
+# nft needs an address literal; resolve a Service FQDN to its IPv4 ClusterIP first.
+if ! echo "$GATEWAY_IP" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+    GATEWAY_IP="$(getent hosts "$GATEWAY_IP" | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ {print $1; exit}')"
+fi
+GATEWAY_IP="${GATEWAY_IP:?GATEWAY_IP could not be resolved from name}"
+
 nft -f - <<EOF
 table inet vpnroute {
   chain prerouting {

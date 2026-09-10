@@ -8,3 +8,13 @@ else
     curl -fSL --retry 3 --retry-delay 2 -o "$out" "$CONFIG_URL"
 fi
 test -s "$out"
+
+# Harden the client config: fail on auth errors, fast server/connect timeouts,
+# replay protection, and quiet replay warnings.
+cat >> "$out" <<'EOF'
+auth-retry none
+server-poll-timeout 5
+connect-timeout 5
+replay-window 64 15
+mute-replay-warnings
+EOF

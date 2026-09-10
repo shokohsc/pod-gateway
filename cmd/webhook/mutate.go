@@ -11,11 +11,11 @@ import (
 const annotationKey = "vpn.example.com/egress"
 
 type Options struct {
-	GatewayIP         string
-	ClusterCIDR       string
-	GatewayCIDR       string
-	VPNServerIP       string
-	RoutingInitImage  string
+	GatewayIP        string
+	ClusterCIDR      string
+	GatewayCIDR      string
+	VPNServerIP      string
+	RoutingInitImage string
 }
 
 func hasGatewayAnnotation(p *v1.Pod) bool {

@@ -49,18 +49,16 @@ traffic and established/related connections are always allowed.
 helm install vpn-egress-gateway deploy/helm \
   --set configURL=https://your-vpn-server/client.ovpn \
   --set vpnServerIP=203.0.113.10 \
-  --set gatewayIP=<gateway-service-cluster-ip> \
   --set clusterCIDR=10.244.0.0/16 \
   --set gatewayCIDR=10.8.0.2/32 \
   --set webhook.issuer.name=<your-cluster-issuer>
 ```
 
-After install, retrieve the gateway Service ClusterIP and set `gatewayIP`
-accordingly:
-
-```bash
-kubectl get svc vpn-egress-gateway -o jsonpath='{.spec.clusterIP}'
-```
+`gatewayIP` defaults to the gateway Service FQDN
+(`vpn-egress-gateway.<namespace>.svc.cluster.local`); the injected
+`routing-init` container resolves it to the Service ClusterIP at pod start, so
+no manual bootstrap step is needed. To pin a specific address instead, pass
+`--set gatewayIP=<cluster-ip>`.
 
 ### Helm Values
 
@@ -73,13 +71,15 @@ kubectl get svc vpn-egress-gateway -o jsonpath='{.spec.clusterIP}'
 | `clusterCIDR` | Cluster pod/service CIDR | `10.244.0.0/16` |
 | `gatewayCIDR` | Gateway tun interface CIDR | `10.8.0.2/32` |
 | `vpnServerIP` | Remote VPN server IP | `""` (required) |
-| `gatewayIP` | Gateway Service ClusterIP | `""` (required) |
+| `gatewayIP` | Gateway Service address (FQDN or literal ClusterIP) | `vpn-egress-gateway.<ns>.svc.cluster.local` |
 | `tolerations` | Pod tolerations | `[]` |
+| `vpnLogLevel` | OpenVPN log verbosity (0-11) | `1` |
 | `gateway.image` | Gateway image name | `gateway` |
 | `routingInit.image` | Routing-init image name | `routing-init` |
 | `webhook.image` | Webhook image name | `vpn-egress-gateway` |
 | `webhook.replicaCount` | Webhook replicas | `1` |
 | `webhook.listenAddr` | Webhook listen address | `:8443` |
+| `webhook.healthAddr` | Plaintext health/readiness listener | `:8080` |
 | `webhook.certName` | cert-manager Certificate name | `vpn-egress-webhook-cert` |
 | `webhook.tlsSecretName` | TLS secret name | `vpn-egress-webhook-cert` |
 | `webhook.issuer.name` | cert-manager ClusterIssuer | `vpn-egress-private-ca` |
@@ -96,6 +96,11 @@ metadata:
 
 The webhook matches `Pod` create/update events and injects the routing
 initContainer. Pods without the annotation are never touched.
+
+The webhook serves `/healthz` (liveness) and `/readyz` (readiness) on the
+plaintext `webhook.healthAddr` port. Readiness fails if the gateway address in
+`GATEWAY_IP` does not resolve, so a broken redirect target takes the webhook
+out of service instead of injecting a dead route.
 
 ## Kill Switch
 

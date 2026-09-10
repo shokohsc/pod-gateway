@@ -5,6 +5,7 @@ VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP is required}"
 CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR is required}"
 GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR is required}"
 TUN_IF="${TUN_IF:-tun0}"
+VPN_LOG_LEVEL="${VPN_LOG_LEVEL:-1}"
 
 nft -f - <<EOF
 table inet killswitch {
@@ -22,6 +23,12 @@ table inet killswitch {
 EOF
 
 exec openvpn --config /etc/openvpn/client.ovpn \
+  --cd /etc/openvpn \
+  --auth-nocache \
+  --pull-filter ignore ifconfig-ipv6 \
+  --pull-filter ignore route-ipv6 \
   --script-security 2 \
+  --up-restart \
   --route-up /usr/local/bin/killswitch-open.sh \
-  --route-pre-down /usr/local/bin/killswitch-close.sh
+  --route-pre-down /usr/local/bin/killswitch-close.sh \
+  --verb "$VPN_LOG_LEVEL"
