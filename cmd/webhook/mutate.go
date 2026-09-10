@@ -14,6 +14,9 @@ type Options struct {
 	ClusterCIDR      string
 	GatewayCIDR      string
 	VPNServerIP      string
+	VXLANID          string
+	VXLANPort        string
+	VXLANNet         string
 	RoutingInitImage string
 	ImagePullPolicy  string
 }
@@ -32,7 +35,17 @@ func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 		}
 	}
 
-	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP, opts.RoutingInitImage, opts.ImagePullPolicy)
+	container := routing.RoutingInitContainer(routing.Params{
+		GatewayIP:       opts.GatewayIP,
+		ClusterCIDR:     opts.ClusterCIDR,
+		GatewayCIDR:     opts.GatewayCIDR,
+		VPNServerIP:     opts.VPNServerIP,
+		VXLANID:         opts.VXLANID,
+		VXLANPort:       opts.VXLANPort,
+		VXLANNet:        opts.VXLANNet,
+		Image:           opts.RoutingInitImage,
+		ImagePullPolicy: opts.ImagePullPolicy,
+	})
 	existing := p.Spec.InitContainers
 	existing = append(existing, container)
 

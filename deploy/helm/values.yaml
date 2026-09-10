@@ -17,9 +17,16 @@ gatewayCIDR: "10.8.0.2/32"
 vpnServerIP: ""
 
 # Redirect target for the webhook's injected routing-init container: the vpn-egress-gateway Service
-# FQDN (default) or a literal ClusterIP. The routing-init initContainer resolves a name to an IP before
-# emitting the nftables rule, so either works.
+# FQDN (default) or a literal ClusterIP. The routing-init initContainer resolves a name to the
+# Service's IP before creating the vxlan tunnel, so either works.
 gatewayIP: ""
+
+# VXLAN overlay between mutated pods and the gateway. Clients point their tunnel at the gateway
+# Service IP; the gateway forwards their (destination-intact) packets into the OpenVPN tunnel.
+# vxlanNet's last octet must be 0; the gateway takes .1 and each client takes .2.
+vxlanID: "1000"
+vxlanPort: "4790"
+vxlanNet: "10.255.0.0/16"
 
 # Pod tolerations (e.g. for Talos control-plane taints). Empty by default.
 tolerations: []

@@ -17,10 +17,10 @@ Everything else in the cluster is untouched.
 │  │              │     │                              │  │
 │  │ routing-init │     │  fetchconfig (initContainer)  │  │
 │  │   ┌────────┐ │     │  ↓ /etc/openvpn/client.ovpn  │  │
-│  │   │ nftables│─┼─dnat──→ gateway ClusterIP :1194   │  │
-│  │   └────────┘ │     │  ↓                            │  │
+│  │   │ vxlan0 │─┼────→│  gateway Service ClusterIP    │  │
+│  │   └────────┘ │     │  ↓ vxlan0                     │  │
 │  │ app traffic  │     │  kill-switch (nftables)       │  │
-│  └──────────────┘     │  ↓                            │  │
+│  └──────────────┘     │  ↓ MASQ                       │  │
 │                       │  openvpn → tun0               │  │
 │                       └──────────────┬───────────────┘  │
 │                                      │                  │
@@ -31,11 +31,14 @@ Everything else in the cluster is untouched.
 ```
 
 A mutating webhook injects a `routing-init` initContainer into annotated pods.
-That container installs an nftables DNAT rule that redirects all non-cluster
-outbound traffic to the gateway Service ClusterIP. The gateway pod runs
-OpenVPN behind an nftables kill-switch: external egress is allowed only out
-`tun0`; when the tunnel is down, all external egress is dropped. Cluster-internal
-traffic and established/related connections are always allowed.
+That container creates a `vxlan0` tunnel pointing at the gateway Service
+ClusterIP and swaps the pod's default route to it, so external egress reaches
+the gateway with the original destination intact. The gateway forwards it into
+`tun0` with masquerade. The gateway pod runs OpenVPN behind an nftables
+kill-switch: external egress is allowed only out `tun0`; when the tunnel is
+down, all external egress is dropped. Cluster-internal traffic and
+established/related connections are always allowed (the client pins
+`CLUSTER_CIDR`/`GATEWAY_CIDR`/`VPN_SERVER_IP` routes to its real interface).
 
 ## Prerequisites
 
@@ -56,8 +59,9 @@ helm install vpn-egress-gateway deploy/helm \
 
 `gatewayIP` defaults to the gateway Service FQDN
 (`vpn-egress-gateway.<namespace>.svc.cluster.local`); the injected
-`routing-init` container resolves it to the Service ClusterIP at pod start, so
-no manual bootstrap step is needed. To pin a specific address instead, pass
+`routing-init` container resolves it to the Service ClusterIP at pod start (the
+vxlan remote needs a literal address, so it is never set manually), and no
+manual bootstrap step is needed. To pin a specific address instead, pass
 `--set gatewayIP=<cluster-ip>`.
 
 ### Helm Values
@@ -72,6 +76,9 @@ no manual bootstrap step is needed. To pin a specific address instead, pass
 | `gatewayCIDR` | Gateway tun interface CIDR | `10.8.0.2/32` |
 | `vpnServerIP` | Remote VPN server IP | `""` (required) |
 | `gatewayIP` | Gateway Service address (FQDN or literal ClusterIP) | `vpn-egress-gateway.<ns>.svc.cluster.local` |
+| `vxlanID` | VXLAN network identifier | `1000` |
+| `vxlanPort` | VXLAN UDP port (also the gateway Service port) | `4790` |
+| `vxlanNet` | VXLAN subnet (gateway `.1`, clients `.2`; last octet must be `0`) | `10.255.0.0/16` |
 | `tolerations` | Pod tolerations | `[]` |
 | `vpnLogLevel` | OpenVPN log verbosity (0-11) | `1` |
 | `dataCiphers` | OpenVPN `--data-ciphers` list | `AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC` |
@@ -121,17 +128,18 @@ External egress from the pod is entirely blocked until the tunnel recovers.
 
 ## Cilium Masquerading Note
 
-With Cilium's kube-proxy replacement, ClusterIP Services are resolved via
-eBPF. The client→gateway redirect and the gateway's forward path must not
-be double-masqueraded. Ensure that:
+The gateway Service is a plain ClusterIP over the VXLAN UDP port
+(`vxlanPort`); Cilium's kube-proxy replacement resolves it via eBPF, so client
+`vxlan0` tunnels can target the Service name. Keep NAT single-ended:
 
-- Source-NAT (masquerade) is applied only on the tunnel egress, not on the
-  client→gateway leg.
-- External reply traffic routes back to the gateway pod correctly.
+- Masquerade is applied **only** on the tunnel leg (`postrouting` out `tun0`,
+  `oifname tun0 masquerade`).
+- The client→gateway VXLAN leg is not masqueraded; reply traversal relies on
+  the gateway's conntrack reversing the tunnel SNAT.
 
 The gateway pod needs `privileged: true` and `nftables`/`netfilter`
-capability so nftables operates inside its own network namespace. No host
-`ip_forward` is required.
+capability so nftables operates inside its own network namespace, plus
+`iproute2` to create the `vxlan0` device. No host `ip_forward` is required.
 
 ## Troubleshooting
 
@@ -142,7 +150,12 @@ then restart.
 
 **Annotated pod has no VPN routing:**
 Ensure the annotation `vpn.example.com/egress: "true"` is present and the
-webhook is running (`kubectl get deploy vpn-egress-webhook`).
+webhook is running (`kubectl get deploy vpn-egress-webhook`). Inside the pod,
+confirm `vxlan0` exists and is the default route (`ip route show`), and that
+CLUSTER_CIDR/GATEWAY_CIDR/VPN_SERVER_IP routes still point at `eth0`.
+
+Check the gateway Service ClusterIP resolves from the pod:
+`getent hosts vpn-egress-gateway.<ns>.svc.cluster.local`.
 
 **Egress works when it shouldn't (kill switch not enforced):**
 Check that the gateway pod has the kill-switch nftables rules installed

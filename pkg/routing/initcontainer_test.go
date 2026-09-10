@@ -7,7 +7,17 @@ import (
 )
 
 func TestRoutingInitContainer(t *testing.T) {
-	c := RoutingInitContainer("10.0.0.1", "10.32.0.0/12", "10.96.0.0/24", "203.0.113.1", "routing-init:latest", "IfNotPresent")
+	c := RoutingInitContainer(Params{
+		GatewayIP:       "10.0.0.1",
+		ClusterCIDR:     "10.32.0.0/12",
+		GatewayCIDR:     "10.96.0.0/24",
+		VPNServerIP:     "203.0.113.1",
+		VXLANID:         "1000",
+		VXLANPort:       "4790",
+		VXLANNet:        "10.255.0.0/16",
+		Image:           "routing-init:latest",
+		ImagePullPolicy: "IfNotPresent",
+	})
 
 	if c.Name != "vpn-egress-redirect" {
 		t.Errorf("Name = %q, want vpn-egress-redirect", c.Name)
@@ -36,14 +46,17 @@ func TestRoutingInitContainer(t *testing.T) {
 	if len(c.Command) != 1 || c.Command[0] != "/usr/local/bin/redirect.sh" {
 		t.Errorf("Command = %v, want [/usr/local/bin/redirect.sh]", c.Command)
 	}
-	if len(c.Env) != 4 {
-		t.Fatalf("Env len = %d, want 4", len(c.Env))
+	if len(c.Env) != 7 {
+		t.Fatalf("Env len = %d, want 7", len(c.Env))
 	}
 	wantEnv := []struct{ name, value string }{
 		{"GATEWAY_IP", "10.0.0.1"},
 		{"CLUSTER_CIDR", "10.32.0.0/12"},
 		{"GATEWAY_CIDR", "10.96.0.0/24"},
 		{"VPN_SERVER_IP", "203.0.113.1"},
+		{"VXLAN_ID", "1000"},
+		{"VXLAN_PORT", "4790"},
+		{"VXLAN_NET", "10.255.0.0/16"},
 	}
 	for i, w := range wantEnv {
 		if c.Env[i].Name != w.name || c.Env[i].Value != w.value {
@@ -53,9 +66,9 @@ func TestRoutingInitContainer(t *testing.T) {
 }
 
 func TestRoutingInitContainerNeverNilEnv(t *testing.T) {
-	c := RoutingInitContainer("", "", "", "", "", "")
+	c := RoutingInitContainer(Params{})
 	if c.Env == nil {
-		t.Error("Env should never be nil (redirect.sh requires all four vars)")
+		t.Error("Env should never be nil (redirect.sh requires all seven vars)")
 	}
 	for _, e := range c.Env {
 		if e.Value != "" {

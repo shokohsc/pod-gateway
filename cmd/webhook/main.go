@@ -46,6 +46,19 @@ func main() {
 		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR, VPN_SERVER_IP must all be set")
 	}
 
+	vxlanID := os.Getenv("VXLAN_ID")
+	if vxlanID == "" {
+		vxlanID = "1000"
+	}
+	vxlanPort := os.Getenv("VXLAN_PORT")
+	if vxlanPort == "" {
+		vxlanPort = "4790"
+	}
+	vxlanNet := os.Getenv("VXLAN_NET")
+	if vxlanNet == "" {
+		vxlanNet = "10.255.0.0/16"
+	}
+
 	routingInitImage := os.Getenv("ROUTING_INIT_IMAGE")
 	if routingInitImage == "" {
 		routingInitImage = "routing-init:latest"
@@ -77,6 +90,9 @@ func main() {
 		ClusterCIDR:      clusterCIDR,
 		GatewayCIDR:      gatewayCIDR,
 		VPNServerIP:      vpnServerIP,
+		VXLANID:          vxlanID,
+		VXLANPort:        vxlanPort,
+		VXLANNet:         vxlanNet,
 		RoutingInitImage: routingInitImage,
 		ImagePullPolicy:  imagePullPolicy,
 	}

@@ -4,9 +4,21 @@ set -e
 VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP is required}"
 CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR is required}"
 GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR is required}"
+VXLAN_ID="${VXLAN_ID:?VXLAN_ID is required}"
+VXLAN_PORT="${VXLAN_PORT:?VXLAN_PORT is required}"
+VXLAN_NET="${VXLAN_NET:?VXLAN_NET is required}"
 TUN_IF="${TUN_IF:-tun0}"
 VPN_LOG_LEVEL="${VPN_LOG_LEVEL:-1}"
 DATA_CIPHERS="${DATA_CIPHERS:-AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC}"
+
+# vxlan0 receives client egress (original dst intact) and forwards it into the tunnel.
+gw_if="$(ip route show default | awk '{print $5; exit}')"
+ip link add vxlan0 type vxlan id "$VXLAN_ID" dev "$gw_if" dstport "$VXLAN_PORT"
+ip link set vxlan0 up
+net="${VXLAN_NET%/*}"
+prefix="${VXLAN_NET#*/}"
+ip addr add "${net%.*}.1/$prefix" dev vxlan0
+sysctl -w net.ipv4.ip_forward=1
 
 nft -f - <<EOF
 table inet killswitch {
@@ -19,6 +31,10 @@ table inet killswitch {
   }
   chain outwall {
     type filter hook output priority filter; policy accept;
+  }
+  chain natwall {
+    type nat hook postrouting priority srcnat; policy accept;
+    oifname $TUN_IF masquerade
   }
 }
 EOF

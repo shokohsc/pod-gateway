@@ -83,6 +83,9 @@ func TestInjectRoutingInitContainer_ProducesPatch(t *testing.T) {
 		ClusterCIDR:      "10.32.0.0/12",
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
+		VXLANID:          "1000",
+		VXLANPort:        "4790",
+		VXLANNet:         "10.255.0.0/16",
 		RoutingInitImage: "routing-init:latest",
 		ImagePullPolicy:  "IfNotPresent",
 	}
@@ -136,6 +139,9 @@ func TestInjectRoutingInitContainer_ExistingInitContainers(t *testing.T) {
 		ClusterCIDR:      "10.32.0.0/12",
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
+		VXLANID:          "1000",
+		VXLANPort:        "4790",
+		VXLANNet:         "10.255.0.0/16",
 		RoutingInitImage: "routing-init:latest",
 		ImagePullPolicy:  "IfNotPresent",
 	}
@@ -178,6 +184,9 @@ func TestInjectRoutingInitContainer_DoubleInjectionGuard(t *testing.T) {
 		ClusterCIDR:      "10.32.0.0/12",
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
+		VXLANID:          "1000",
+		VXLANPort:        "4790",
+		VXLANNet:         "10.255.0.0/16",
 		RoutingInitImage: "routing-init:latest",
 		ImagePullPolicy:  "IfNotPresent",
 	}
