@@ -52,10 +52,19 @@ else
     exit 1
 fi
 
-# --- Test 1: fetchconfig.sh downloads config to output path ---
+# --- Test 1: fetchconfig.sh downloads config via HTTP ---
 echo "Test 1: fetchconfig.sh fetches config from URL"
 
-OUT="$OUTPUT_FILE" CONFIG_URL="file://$DUMMY_CONFIG" "$FETCHCONFIG" 2>&1
+# Start a temporary HTTP server to serve the dummy config
+SERVE_DIR="$TMPDIR/serve"
+mkdir -p "$SERVE_DIR"
+cp "$DUMMY_CONFIG" "$SERVE_DIR/client.ovpn"
+python3 -m http.server 18080 --directory "$SERVE_DIR" &>/dev/null &
+HTTP_PID=$!
+trap 'rm -rf "$TMPDIR"; kill "$HTTP_PID" 2>/dev/null || true' EXIT
+sleep 0.5
+
+OUT="$OUTPUT_FILE" CONFIG_URL="http://127.0.0.1:18080/client.ovpn" "$FETCHCONFIG" 2>&1
 
 if [ -f "$OUTPUT_FILE" ] && [ -s "$OUTPUT_FILE" ]; then
     if diff -q "$DUMMY_CONFIG" "$OUTPUT_FILE" > /dev/null 2>&1; then
@@ -80,7 +89,7 @@ fi
 # --- Test 3: Nonexistent config path causes failure ---
 echo "Test 3: nonexistent config path causes failure"
 rm -f "$OUTPUT_FILE"
-if OUT="$OUTPUT_FILE" CONFIG_URL="file:///nonexistent/config.ovpn" "$FETCHCONFIG" 2>&1; then
+if OUT="$OUTPUT_FILE" CONFIG_URL="http://127.0.0.1:18080/nonexistent.ovpn" "$FETCHCONFIG" 2>&1; then
     fail "expected failure with nonexistent config path"
 else
     pass "correctly fails with nonexistent config path"

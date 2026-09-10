@@ -38,11 +38,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push (sha)
-        run: make docker-build docker-push REGISTRY=ghcr.io/${{ github.repository_owner }} IMAGE_TAG=${{ github.sha }}
+      - name: Short SHA
+        id: sha
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Build and push
+        run: make docker-build docker-push REGISTRY=ghcr.io/${{ github.repository_owner }} IMAGE_TAG=${{ steps.sha.outputs.short }}
       - name: Tag and push latest
         run: |
           for img in vpn-egress-gateway gateway routing-init; do
-            docker tag ghcr.io/${{ github.repository_owner }}/$img:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/$img:latest
+            docker tag ghcr.io/${{ github.repository_owner }}/$img:${{ steps.sha.outputs.short }} ghcr.io/${{ github.repository_owner }}/$img:latest
             docker push ghcr.io/${{ github.repository_owner }}/$img:latest
           done
