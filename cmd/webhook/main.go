@@ -41,9 +41,8 @@ func main() {
 	gatewayIP := os.Getenv("GATEWAY_IP")
 	clusterCIDR := os.Getenv("CLUSTER_CIDR")
 	gatewayCIDR := os.Getenv("GATEWAY_CIDR")
-	vpnServerIP := os.Getenv("VPN_SERVER_IP")
-	if gatewayIP == "" || clusterCIDR == "" || gatewayCIDR == "" || vpnServerIP == "" {
-		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR, VPN_SERVER_IP must all be set")
+	if gatewayIP == "" || clusterCIDR == "" || gatewayCIDR == "" {
+		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR must all be set")
 	}
 
 	clusterServicesCIDR := os.Getenv("CLUSTER_SERVICES_CIDR")
@@ -95,7 +94,6 @@ func main() {
 		ClusterCIDR:         clusterCIDR,
 		GatewayCIDR:         gatewayCIDR,
 		ClusterServicesCIDR: clusterServicesCIDR,
-		VPNServerIP:         vpnServerIP,
 		VXLANID:             vxlanID,
 		VXLANPort:           vxlanPort,
 		VXLANNet:            vxlanNet,

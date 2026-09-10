@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP is required}"
 CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR is required}"
 GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR is required}"
 CLUSTER_SERVICES_CIDR="${CLUSTER_SERVICES_CIDR:?CLUSTER_SERVICES_CIDR is required}"
@@ -44,7 +43,6 @@ table inet killswitch {
     ct state established,related accept
     ip saddr { $CLUSTER_CIDR, $GATEWAY_CIDR } accept
     ip daddr { $CLUSTER_CIDR, $GATEWAY_CIDR, $CLUSTER_SERVICES_CIDR } accept
-    ip daddr $VPN_SERVER_IP accept
   }
   chain outwall {
     type filter hook output priority filter; policy accept;

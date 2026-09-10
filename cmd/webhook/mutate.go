@@ -14,7 +14,6 @@ type Options struct {
 	ClusterCIDR         string
 	GatewayCIDR         string
 	ClusterServicesCIDR string
-	VPNServerIP         string
 	VXLANID             string
 	VXLANPort           string
 	VXLANNet            string
@@ -41,7 +40,6 @@ func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 		ClusterCIDR:         opts.ClusterCIDR,
 		GatewayCIDR:         opts.GatewayCIDR,
 		ClusterServicesCIDR: opts.ClusterServicesCIDR,
-		VPNServerIP:         opts.VPNServerIP,
 		VXLANID:             opts.VXLANID,
 		VXLANPort:           opts.VXLANPort,
 		VXLANNet:            opts.VXLANNet,

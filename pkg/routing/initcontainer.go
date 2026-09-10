@@ -8,7 +8,6 @@ type Params struct {
 	ClusterCIDR         string
 	GatewayCIDR         string
 	ClusterServicesCIDR string
-	VPNServerIP         string
 	VXLANID             string
 	VXLANPort           string
 	VXLANNet            string
@@ -41,7 +40,6 @@ func RoutingInitContainer(p Params) v1.Container {
 			{Name: "CLUSTER_CIDR", Value: p.ClusterCIDR},
 			{Name: "GATEWAY_CIDR", Value: p.GatewayCIDR},
 			{Name: "CLUSTER_SERVICES_CIDR", Value: p.ClusterServicesCIDR},
-			{Name: "VPN_SERVER_IP", Value: p.VPNServerIP},
 			{Name: "VXLAN_ID", Value: p.VXLANID},
 			{Name: "VXLAN_PORT", Value: p.VXLANPort},
 			{Name: "VXLAN_NET", Value: p.VXLANNet},

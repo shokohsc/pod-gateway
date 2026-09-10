@@ -38,7 +38,7 @@ the gateway with the original destination intact. The gateway forwards it into
 kill-switch: external egress is allowed only out `tun0`; when the tunnel is
 down, all external egress is dropped. Cluster-internal traffic and
 established/related connections are always allowed (the client pins
-`CLUSTER_CIDR`/`GATEWAY_CIDR`/`VPN_SERVER_IP` routes to its real interface).
+`CLUSTER_CIDR`/`CLUSTER_SERVICES_CIDR`/`GATEWAY_CIDR` routes to its real interface).
 
 ## Prerequisites
 
@@ -51,7 +51,6 @@ established/related connections are always allowed (the client pins
 ```bash
 helm install vpn-egress-gateway deploy/helm \
   --set configURL=https://your-vpn-server/client.ovpn \
-  --set vpnServerIP=203.0.113.10 \
   --set clusterCIDR=10.244.0.0/16 \
   --set gatewayCIDR=10.8.0.2/32 \
   --set webhook.issuer.name=<your-cluster-issuer>
@@ -75,7 +74,6 @@ manual bootstrap step is needed. To pin a specific address instead, pass
 | `clusterCIDR` | Cluster pod/service CIDR | `10.244.0.0/16` |
 | `clusterServicesCIDR` | Cluster Service CIDR (CoreDNS etc.; kept out of the tunnel on both ends) | `10.96.0.0/12` |
 | `gatewayCIDR` | Gateway tun interface CIDR | `10.8.0.2/32` |
-| `vpnServerIP` | Remote VPN server IP | `""` (required) |
 | `gatewayIP` | Gateway Service address (FQDN or literal ClusterIP) | `vpn-egress-gateway.<ns>.svc.cluster.local` |
 | `vxlanID` | VXLAN network identifier | `1000` |
 | `vxlanPort` | VXLAN UDP port (also the gateway Service port) | `4790` |
@@ -153,7 +151,7 @@ served, then restart.
 Ensure the annotation `vpn.example.com/egress: "true"` is present and the
 webhook is running (`kubectl get deploy vpn-egress-webhook`). Inside the pod,
 confirm `vxlan0` exists and is the default route (`ip route show`), and that
-CLUSTER_CIDR/CLUSTER_SERVICES_CIDR/GATEWAY_CIDR/VPN_SERVER_IP routes still point at `eth0`.
+CLUSTER_CIDR/CLUSTER_SERVICES_CIDR/GATEWAY_CIDR routes still point at `eth0`.
 
 Check the gateway Service ClusterIP resolves from the pod:
 `getent hosts vpn-egress-gateway.<ns>.svc.cluster.local`.

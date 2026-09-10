@@ -37,7 +37,6 @@ pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }
 fail() { FAIL=$((FAIL + 1)); echo "  FAIL: $1"; }
 
 TUN_IF="${TUN_IF:-tun0}"
-VPN_SERVER_IP="${VPN_SERVER_IP:-198.51.100.1}"
 CLUSTER_CIDR="${CLUSTER_CIDR:-10.0.0.0/8}"
 GATEWAY_CIDR="${GATEWAY_CIDR:-192.168.1.0/24}"
 
@@ -78,7 +77,6 @@ table inet killswitch {
     ct state established,related accept
     ip saddr { $CLUSTER_CIDR, $GATEWAY_CIDR } accept
     ip daddr { $CLUSTER_CIDR, $GATEWAY_CIDR } accept
-    ip daddr $VPN_SERVER_IP accept
   }
   chain outwall {
     type filter hook output priority filter; policy accept;
@@ -103,8 +101,7 @@ chain_policy_is_drop() {
 always_on_present() {
     chain_has_rule 'ct state established,related' \
         && chain_has_rule 'ip saddr' \
-        && chain_has_rule 'ip daddr' \
-        && chain_has_rule "ip daddr $VPN_SERVER_IP"
+        && chain_has_rule 'ip daddr'
 }
 
 # --- Base state: always-on accepts present, policy drop, tun-egress absent ---

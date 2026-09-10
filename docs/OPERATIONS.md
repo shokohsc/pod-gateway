@@ -9,7 +9,6 @@ The gateway's OpenVPN config is fetched at startup from the URL in
    ```bash
    helm upgrade vpn-egress-gateway deploy/helm \
      --set configURL=https://new-vpn-server/client.ovpn \
-     --set vpnServerIP=<new-server-ip> \
      ...
    ```
 2. Roll the gateway Deployment:

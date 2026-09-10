@@ -18,9 +18,6 @@ clusterServicesCIDR: "10.96.0.0/12"
 # CIDR of the gateway's tun interface. The kill-switch routes/tracks this range.
 gatewayCIDR: "10.8.0.2/32"
 
-# IP/name of the remote VPN server.
-vpnServerIP: ""
-
 # Redirect target for the webhook's injected routing-init container: the vpn-egress-gateway Service
 # FQDN (default) or a literal ClusterIP. The routing-init initContainer resolves a name to the
 # Service's IP before creating the vxlan tunnel, so either works.

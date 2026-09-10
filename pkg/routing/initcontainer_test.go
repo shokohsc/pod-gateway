@@ -12,7 +12,6 @@ func TestRoutingInitContainer(t *testing.T) {
 		ClusterCIDR:         "10.32.0.0/12",
 		GatewayCIDR:         "10.96.0.0/24",
 		ClusterServicesCIDR: "10.96.0.0/12",
-		VPNServerIP:         "203.0.113.1",
 		VXLANID:             "1000",
 		VXLANPort:           "4790",
 		VXLANNet:            "10.255.0.0/16",
@@ -47,15 +46,14 @@ func TestRoutingInitContainer(t *testing.T) {
 	if len(c.Command) != 1 || c.Command[0] != "/usr/local/bin/redirect.sh" {
 		t.Errorf("Command = %v, want [/usr/local/bin/redirect.sh]", c.Command)
 	}
-	if len(c.Env) != 8 {
-		t.Fatalf("Env len = %d, want 8", len(c.Env))
+	if len(c.Env) != 7 {
+		t.Fatalf("Env len = %d, want 7", len(c.Env))
 	}
 	wantEnv := []struct{ name, value string }{
 		{"GATEWAY_IP", "10.0.0.1"},
 		{"CLUSTER_CIDR", "10.32.0.0/12"},
 		{"GATEWAY_CIDR", "10.96.0.0/24"},
 		{"CLUSTER_SERVICES_CIDR", "10.96.0.0/12"},
-		{"VPN_SERVER_IP", "203.0.113.1"},
 		{"VXLAN_ID", "1000"},
 		{"VXLAN_PORT", "4790"},
 		{"VXLAN_NET", "10.255.0.0/16"},
@@ -70,7 +68,7 @@ func TestRoutingInitContainer(t *testing.T) {
 func TestRoutingInitContainerNeverNilEnv(t *testing.T) {
 	c := RoutingInitContainer(Params{})
 	if c.Env == nil {
-		t.Error("Env should never be nil (redirect.sh requires all eight vars)")
+		t.Error("Env should never be nil (redirect.sh requires all seven vars)")
 	}
 	for _, e := range c.Env {
 		if e.Value != "" {

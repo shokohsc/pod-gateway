@@ -30,8 +30,6 @@ spec:
               value: {{ .Values.gatewayCIDR | quote }}
             - name: CLUSTER_SERVICES_CIDR
               value: {{ .Values.clusterServicesCIDR | quote }}
-            - name: VPN_SERVER_IP
-              value: {{ .Values.vpnServerIP | quote }}
             - name: VXLAN_ID
               value: {{ .Values.vxlanID | quote }}
             - name: VXLAN_PORT
