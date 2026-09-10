@@ -9,16 +9,17 @@ import (
 )
 
 type Options struct {
-	AnnotationKey    string
-	GatewayIP        string
-	ClusterCIDR      string
-	GatewayCIDR      string
-	VPNServerIP      string
-	VXLANID          string
-	VXLANPort        string
-	VXLANNet         string
-	RoutingInitImage string
-	ImagePullPolicy  string
+	AnnotationKey       string
+	GatewayIP           string
+	ClusterCIDR         string
+	GatewayCIDR         string
+	ClusterServicesCIDR string
+	VPNServerIP         string
+	VXLANID             string
+	VXLANPort           string
+	VXLANNet            string
+	RoutingInitImage    string
+	ImagePullPolicy     string
 }
 
 func hasGatewayAnnotation(p *v1.Pod, key string) bool {
@@ -36,15 +37,16 @@ func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 	}
 
 	container := routing.RoutingInitContainer(routing.Params{
-		GatewayIP:       opts.GatewayIP,
-		ClusterCIDR:     opts.ClusterCIDR,
-		GatewayCIDR:     opts.GatewayCIDR,
-		VPNServerIP:     opts.VPNServerIP,
-		VXLANID:         opts.VXLANID,
-		VXLANPort:       opts.VXLANPort,
-		VXLANNet:        opts.VXLANNet,
-		Image:           opts.RoutingInitImage,
-		ImagePullPolicy: opts.ImagePullPolicy,
+		GatewayIP:           opts.GatewayIP,
+		ClusterCIDR:         opts.ClusterCIDR,
+		GatewayCIDR:         opts.GatewayCIDR,
+		ClusterServicesCIDR: opts.ClusterServicesCIDR,
+		VPNServerIP:         opts.VPNServerIP,
+		VXLANID:             opts.VXLANID,
+		VXLANPort:           opts.VXLANPort,
+		VXLANNet:            opts.VXLANNet,
+		Image:               opts.RoutingInitImage,
+		ImagePullPolicy:     opts.ImagePullPolicy,
 	})
 	existing := p.Spec.InitContainers
 	existing = append(existing, container)

@@ -46,6 +46,11 @@ func main() {
 		log.Fatal("GATEWAY_IP, CLUSTER_CIDR, GATEWAY_CIDR, VPN_SERVER_IP must all be set")
 	}
 
+	clusterServicesCIDR := os.Getenv("CLUSTER_SERVICES_CIDR")
+	if clusterServicesCIDR == "" {
+		clusterServicesCIDR = "10.96.0.0/12"
+	}
+
 	vxlanID := os.Getenv("VXLAN_ID")
 	if vxlanID == "" {
 		vxlanID = "1000"
@@ -85,16 +90,17 @@ func main() {
 	}
 
 	opts := Options{
-		AnnotationKey:    annotationKey,
-		GatewayIP:        gatewayIP,
-		ClusterCIDR:      clusterCIDR,
-		GatewayCIDR:      gatewayCIDR,
-		VPNServerIP:      vpnServerIP,
-		VXLANID:          vxlanID,
-		VXLANPort:        vxlanPort,
-		VXLANNet:         vxlanNet,
-		RoutingInitImage: routingInitImage,
-		ImagePullPolicy:  imagePullPolicy,
+		AnnotationKey:       annotationKey,
+		GatewayIP:           gatewayIP,
+		ClusterCIDR:         clusterCIDR,
+		GatewayCIDR:         gatewayCIDR,
+		ClusterServicesCIDR: clusterServicesCIDR,
+		VPNServerIP:         vpnServerIP,
+		VXLANID:             vxlanID,
+		VXLANPort:           vxlanPort,
+		VXLANNet:            vxlanNet,
+		RoutingInitImage:    routingInitImage,
+		ImagePullPolicy:     imagePullPolicy,
 	}
 
 	mux := http.NewServeMux()

@@ -11,6 +11,10 @@ configURL: ""
 # from the tunnel so cluster-internal traffic bypasses the VPN.
 clusterCIDR: "10.244.0.0/16"
 
+# CIDR of the cluster Service network (CoreDNS ClusterIPs, etc.). Pinned to the real interface on both
+# client and gateway so in-cluster service/DNS traffic never enters the tunnel or hits the kill-switch.
+clusterServicesCIDR: "10.96.0.0/12"
+
 # CIDR of the gateway's tun interface. The kill-switch routes/tracks this range.
 gatewayCIDR: "10.8.0.2/32"
 

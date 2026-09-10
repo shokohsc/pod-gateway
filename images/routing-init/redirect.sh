@@ -2,6 +2,7 @@
 set -e
 GATEWAY_CIDR="${GATEWAY_CIDR:?GATEWAY_CIDR required}"
 CLUSTER_CIDR="${CLUSTER_CIDR:?CLUSTER_CIDR required}"
+CLUSTER_SERVICES_CIDR="${CLUSTER_SERVICES_CIDR:?CLUSTER_SERVICES_CIDR required}"
 GATEWAY_IP="${GATEWAY_IP:?GATEWAY_IP required}"
 VPN_SERVER_IP="${VPN_SERVER_IP:?VPN_SERVER_IP required}"
 VXLAN_ID="${VXLAN_ID:?VXLAN_ID required}"
@@ -26,6 +27,7 @@ client_ip="${net%.*}.2"
 gw="$(ip route show default | awk '{print $3; exit}')"
 gw_dev="$(ip route show default | awk '{print $5; exit}')"
 ip route replace "$CLUSTER_CIDR" via "$gw" dev "$gw_dev"
+ip route replace "$CLUSTER_SERVICES_CIDR" via "$gw" dev "$gw_dev"
 ip route replace "$GATEWAY_CIDR" via "$gw" dev "$gw_dev"
 ip route replace "$VPN_SERVER_IP" via "$gw" dev "$gw_dev"
 

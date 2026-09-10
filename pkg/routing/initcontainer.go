@@ -4,15 +4,16 @@ import v1 "k8s.io/api/core/v1"
 
 // Params configures the injected routing initContainer.
 type Params struct {
-	GatewayIP       string
-	ClusterCIDR     string
-	GatewayCIDR     string
-	VPNServerIP     string
-	VXLANID         string
-	VXLANPort       string
-	VXLANNet        string
-	Image           string
-	ImagePullPolicy string
+	GatewayIP           string
+	ClusterCIDR         string
+	GatewayCIDR         string
+	ClusterServicesCIDR string
+	VPNServerIP         string
+	VXLANID             string
+	VXLANPort           string
+	VXLANNet            string
+	Image               string
+	ImagePullPolicy     string
 }
 
 // RoutingInitContainer returns an initContainer spec that runs redirect.sh
@@ -39,6 +40,7 @@ func RoutingInitContainer(p Params) v1.Container {
 			{Name: "GATEWAY_IP", Value: p.GatewayIP},
 			{Name: "CLUSTER_CIDR", Value: p.ClusterCIDR},
 			{Name: "GATEWAY_CIDR", Value: p.GatewayCIDR},
+			{Name: "CLUSTER_SERVICES_CIDR", Value: p.ClusterServicesCIDR},
 			{Name: "VPN_SERVER_IP", Value: p.VPNServerIP},
 			{Name: "VXLAN_ID", Value: p.VXLANID},
 			{Name: "VXLAN_PORT", Value: p.VXLANPort},

@@ -73,6 +73,7 @@ manual bootstrap step is needed. To pin a specific address instead, pass
 | `imagePullPolicy` | Pull policy | `IfNotPresent` |
 | `configURL` | URL to download `.ovpn` client config | `""` (required) |
 | `clusterCIDR` | Cluster pod/service CIDR | `10.244.0.0/16` |
+| `clusterServicesCIDR` | Cluster Service CIDR (CoreDNS etc.; kept out of the tunnel on both ends) | `10.96.0.0/12` |
 | `gatewayCIDR` | Gateway tun interface CIDR | `10.8.0.2/32` |
 | `vpnServerIP` | Remote VPN server IP | `""` (required) |
 | `gatewayIP` | Gateway Service address (FQDN or literal ClusterIP) | `vpn-egress-gateway.<ns>.svc.cluster.local` |
@@ -152,10 +153,18 @@ served, then restart.
 Ensure the annotation `vpn.example.com/egress: "true"` is present and the
 webhook is running (`kubectl get deploy vpn-egress-webhook`). Inside the pod,
 confirm `vxlan0` exists and is the default route (`ip route show`), and that
-CLUSTER_CIDR/GATEWAY_CIDR/VPN_SERVER_IP routes still point at `eth0`.
+CLUSTER_CIDR/CLUSTER_SERVICES_CIDR/GATEWAY_CIDR/VPN_SERVER_IP routes still point at `eth0`.
 
 Check the gateway Service ClusterIP resolves from the pod:
 `getent hosts vpn-egress-gateway.<ns>.svc.cluster.local`.
+
+**Annotated pod has no DNS resolution:**
+The cluster Service CIDR is pinned out of the tunnel via `clusterServicesCIDR`.
+If DNS still fails, the cluster's service CIDR differs from the default
+`10.96.0.0/12` (check `kubectl cluster-info` / the API server's
+`--service-cluster-ip-range`), or a node-local DNS cache is in use and its node
+address must be added to the pinned routes. Update the value on both the webhook
+and gateway (helm values) and re-rollout.
 
 **Egress works when it shouldn't (kill switch not enforced):**
 Check that the gateway pod has the kill-switch nftables rules installed
