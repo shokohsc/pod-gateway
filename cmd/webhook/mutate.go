@@ -15,6 +15,7 @@ type Options struct {
 	GatewayCIDR      string
 	VPNServerIP      string
 	RoutingInitImage string
+	ImagePullPolicy  string
 }
 
 func hasGatewayAnnotation(p *v1.Pod, key string) bool {
@@ -31,7 +32,7 @@ func injectRoutingInitContainer(p *v1.Pod, opts Options) ([]byte, error) {
 		}
 	}
 
-	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP, opts.RoutingInitImage)
+	container := routing.RoutingInitContainer(opts.GatewayIP, opts.ClusterCIDR, opts.GatewayCIDR, opts.VPNServerIP, opts.RoutingInitImage, opts.ImagePullPolicy)
 	existing := p.Spec.InitContainers
 	existing = append(existing, container)
 

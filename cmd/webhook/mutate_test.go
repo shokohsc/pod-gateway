@@ -84,6 +84,7 @@ func TestInjectRoutingInitContainer_ProducesPatch(t *testing.T) {
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
 		RoutingInitImage: "routing-init:latest",
+		ImagePullPolicy:  "IfNotPresent",
 	}
 
 	patch, err := injectRoutingInitContainer(pod, opts)
@@ -136,6 +137,7 @@ func TestInjectRoutingInitContainer_ExistingInitContainers(t *testing.T) {
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
 		RoutingInitImage: "routing-init:latest",
+		ImagePullPolicy:  "IfNotPresent",
 	}
 	patch, err := injectRoutingInitContainer(pod, opts)
 	if err != nil {
@@ -177,6 +179,7 @@ func TestInjectRoutingInitContainer_DoubleInjectionGuard(t *testing.T) {
 		GatewayCIDR:      "10.96.0.0/24",
 		VPNServerIP:      "203.0.113.1",
 		RoutingInitImage: "routing-init:latest",
+		ImagePullPolicy:  "IfNotPresent",
 	}
 	patch, err := injectRoutingInitContainer(pod, opts)
 	if err != nil {

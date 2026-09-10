@@ -51,6 +51,11 @@ func main() {
 		routingInitImage = "routing-init:latest"
 	}
 
+	imagePullPolicy := os.Getenv("IMAGE_PULL_POLICY")
+	if imagePullPolicy == "" {
+		imagePullPolicy = "IfNotPresent"
+	}
+
 	annotationKey := os.Getenv("ANNOTATION_KEY")
 	if annotationKey == "" {
 		annotationKey = "vpn.example.com/egress"
@@ -73,6 +78,7 @@ func main() {
 		GatewayCIDR:      gatewayCIDR,
 		VPNServerIP:      vpnServerIP,
 		RoutingInitImage: routingInitImage,
+		ImagePullPolicy:  imagePullPolicy,
 	}
 
 	mux := http.NewServeMux()

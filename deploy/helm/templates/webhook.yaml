@@ -39,6 +39,8 @@ spec:
               value: {{ .Values.vpnServerIP | quote }}
             - name: ROUTING_INIT_IMAGE
               value: {{ .Values.routingInit.image | quote }}
+            - name: IMAGE_PULL_POLICY
+              value: {{ .Values.imagePullPolicy | quote }}
           ports:
             - containerPort: 8443
               name: https
