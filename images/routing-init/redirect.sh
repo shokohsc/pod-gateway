@@ -29,8 +29,9 @@ ip route replace "$CLUSTER_CIDR" via "$gw" dev "$gw_dev"
 ip route replace "$GATEWAY_CIDR" via "$gw" dev "$gw_dev"
 ip route replace "$VPN_SERVER_IP" via "$gw" dev "$gw_dev"
 
+ip link del vxlan0 2>/dev/null || true
 ip link add vxlan0 type vxlan id "$VXLAN_ID" dev "$gw_dev" remote "$GATEWAY_IP" dstport "$VXLAN_PORT"
 ip link set vxlan0 up
-ip addr add "$client_ip/$prefix" dev vxlan0
+ip addr replace "$client_ip/$prefix" dev vxlan0
 bridge fdb append 00:00:00:00:00:00 dst "$GATEWAY_IP" dev vxlan0
 ip route replace default via "$gw_ip" dev vxlan0

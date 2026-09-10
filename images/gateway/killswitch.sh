@@ -12,12 +12,14 @@ VPN_LOG_LEVEL="${VPN_LOG_LEVEL:-1}"
 DATA_CIPHERS="${DATA_CIPHERS:-AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC}"
 
 # vxlan0 receives client egress (original dst intact) and forwards it into the tunnel.
+# A container restart reuses the pod netns, so clean up any vxlan0 from a previous run.
 gw_if="$(ip route show default | awk '{print $5; exit}')"
+ip link del vxlan0 2>/dev/null || true
 ip link add vxlan0 type vxlan id "$VXLAN_ID" dev "$gw_if" dstport "$VXLAN_PORT"
 ip link set vxlan0 up
 net="${VXLAN_NET%/*}"
 prefix="${VXLAN_NET#*/}"
-ip addr add "${net%.*}.1/$prefix" dev vxlan0
+ip addr replace "${net%.*}.1/$prefix" dev vxlan0
 sysctl -w net.ipv4.ip_forward=1
 
 nft -f - <<EOF
