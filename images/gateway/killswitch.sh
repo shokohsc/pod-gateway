@@ -27,6 +27,7 @@ ip link add vxlan0 type vxlan id "$VXLAN_ID" dev "$gw_if" dstport "$VXLAN_PORT"
 ip link set vxlan0 up
 net="${VXLAN_NET%/*}"
 prefix="${VXLAN_NET#*/}"
+ip route replace "$CLUSTER_CIDR" via "$gw_ip" dev "$gw_if"
 ip addr replace "${net%.*}.1/$prefix" dev vxlan0
 sysctl -w net.ipv4.ip_forward=1
 
