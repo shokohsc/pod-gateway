@@ -11,6 +11,13 @@ TUN_IF="$(printf '%s' "${TUN_IF:-tun0}" | tr -d '"')"
 VPN_LOG_LEVEL="${VPN_LOG_LEVEL:-1}"
 DATA_CIPHERS="${DATA_CIPHERS:-AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC}"
 
+# Fetch a fresh client config every container start, so a VPN-drop restart
+# re-downloads it instead of reusing the previous one.
+CONFIG_URL="${CONFIG_URL:-}"
+if [ -n "$CONFIG_URL" ]; then
+  /usr/local/bin/fetchconfig.sh
+fi
+
 # vxlan0 receives client egress (original dst intact) and forwards it into the tunnel.
 # A container restart reuses the pod netns, so clean up any vxlan0 from a previous run.
 gw_if="$(ip route show default | awk '{print $5; exit}')"

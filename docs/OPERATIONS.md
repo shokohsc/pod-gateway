@@ -21,8 +21,8 @@ The gateway's OpenVPN config is fetched at startup from the URL in
    kubectl rollout status deploy/vpn-egress-gateway
    ```
 
-The `fetchconfig` initContainer will download the new config into a shared
-`emptyDir` at `/etc/openvpn/client.ovpn` before the main container starts.
+The gateway container downloads the config to `/etc/openvpn/client.ovpn` at
+the start of every container start, so a VPN-drop restart re-fetches it.
 If the download fails, the pod will `CrashLoopBackOff` — fix the URL and
 restart.
 

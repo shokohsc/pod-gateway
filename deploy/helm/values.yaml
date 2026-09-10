@@ -3,7 +3,8 @@ registry: ghcr.io/example
 tag: latest
 imagePullPolicy: IfNotPresent
 
-# Remote URL the gateway initContainer fetches the openvpn client config from and writes to /etc/openvpn/client.ovpn.
+# Remote URL the gateway container fetches the openvpn client config from
+# (re-downloaded at every container start) and writes to /etc/openvpn/client.ovpn.
 configURL: ""
 
 # RFC1918-ish range used inside the cluster (cluster pod/service CIDR). The kill-switch accepts this range

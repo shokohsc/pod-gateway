@@ -15,17 +15,6 @@ spec:
         app: vpn-egress-gateway
     spec:
       tolerations: {{- toYaml .Values.tolerations | nindent 8 }}
-      initContainers:
-        - name: fetchconfig
-          image: "{{ .Values.registry }}/{{ .Values.gateway.image }}:{{ .Values.tag }}"
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
-          command: ["/usr/local/bin/fetchconfig.sh"]
-          env:
-            - name: CONFIG_URL
-              value: {{ .Values.configURL | quote }}
-          volumeMounts:
-            - name: openvpn
-              mountPath: /etc/openvpn
       containers:
         - name: gateway
           image: "{{ .Values.registry }}/{{ .Values.gateway.image }}:{{ .Values.tag }}"
@@ -33,6 +22,8 @@ spec:
           securityContext:
             privileged: true
           env:
+            - name: CONFIG_URL
+              value: {{ .Values.configURL | quote }}
             - name: CLUSTER_CIDR
               value: {{ .Values.clusterCIDR | quote }}
             - name: GATEWAY_CIDR
@@ -51,12 +42,6 @@ spec:
               value: {{ .Values.vpnLogLevel | default "1" | quote }}
             - name: DATA_CIPHERS
               value: {{ .Values.dataCiphers | default "AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC" | quote }}
-          volumeMounts:
-            - name: openvpn
-              mountPath: /etc/openvpn
-      volumes:
-        - name: openvpn
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

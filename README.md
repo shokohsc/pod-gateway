@@ -15,8 +15,8 @@ Everything else in the cluster is untouched.
 │  ┌──────────────┐     ┌──────────────────────────────┐  │
 │  │ Annotated Pod │     │ Gateway Deployment            │  │
 │  │              │     │                              │  │
-│  │ routing-init │     │  fetchconfig (initContainer)  │  │
-│  │   ┌────────┐ │     │  ↓ /etc/openvpn/client.ovpn  │  │
+│  │ routing-init │     │  fetch config (container start)│  │
+│  │   ┌────────┐ │     │  ↓ /etc/openvpn/client.ovpn     │  │
 │  │   │ vxlan0 │─┼────→│  gateway Service ClusterIP    │  │
 │  │   └────────┘ │     │  ↓ vxlan0                     │  │
 │  │ app traffic  │     │  kill-switch (nftables)       │  │
@@ -144,9 +144,9 @@ capability so nftables operates inside its own network namespace, plus
 ## Troubleshooting
 
 **Gateway pod is CrashLoopBackOff:**
-Check the `fetchconfig` initContainer logs — the `.ovpn` download from
-`CONFIG_URL` likely failed. Fix the URL or ensure the config file is served,
-then restart.
+The client `.ovpn` download from `CONFIG_URL` (done at the start of every
+container start) likely failed. Fix the URL or ensure the config file is
+served, then restart.
 
 **Annotated pod has no VPN routing:**
 Ensure the annotation `vpn.example.com/egress: "true"` is present and the
